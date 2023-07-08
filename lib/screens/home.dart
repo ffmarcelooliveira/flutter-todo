@@ -14,28 +14,14 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final todosList = ToDo.todoList();
 
-  void _handleToDoChange(ToDo todo) {
-    setState(() {
-      todo.isDone = !todo.isDone!;
-    });
-  }
-
-  void _deleteToDoItem(String id) {
-    setState(() {
-      todosList.removeWhere((item) => item.id == id);
-    });
-  }
+  List<ToDo> _foundToDo = [];
 
   final _todoController = TextEditingController();
 
-  void _addToDoItem(String toDo) {
-    setState(() {
-      todosList.add(ToDo(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          todoText: toDo,
-          isDone: false));
-    });
-    _todoController.clear();
+  @override
+  void initState() {
+    _foundToDo = todosList;
+    super.initState();
   }
 
   @override
@@ -60,7 +46,7 @@ class _HomeState extends State<Home> {
                                 style: TextStyle(
                                     fontSize: 30,
                                     fontWeight: FontWeight.w500))),
-                        for (ToDo todoItems in todosList)
+                        for (ToDo todoItems in _foundToDo.reversed)
                           TodoItem(
                               todo: todoItems,
                               onTodoChanged: _handleToDoChange,
@@ -132,20 +118,62 @@ class _HomeState extends State<Home> {
       ]),
     );
   }
-}
 
-Widget searchBox() {
-  return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(20)),
-      child: const TextField(
-        decoration: InputDecoration(
-            contentPadding: EdgeInsets.all(0),
-            prefixIcon: Icon(Icons.search, color: tdBlack, size: 20),
-            prefixIconConstraints: BoxConstraints(maxHeight: 20, maxWidth: 25),
-            border: InputBorder.none,
-            hintText: 'Search',
-            hintStyle: TextStyle(color: tdGrey)),
-      ));
+  void _handleToDoChange(ToDo todo) {
+    setState(() {
+      todo.isDone = !todo.isDone!;
+    });
+  }
+
+  void _deleteToDoItem(String id) {
+    setState(() {
+      todosList.removeWhere((item) => item.id == id);
+    });
+  }
+
+  void _addToDoItem(String toDo) {
+    setState(() {
+      todosList.add(ToDo(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          todoText: toDo,
+          isDone: false));
+    });
+    _todoController.clear();
+  }
+
+  void _runFilter(String enteredKeyWord) {
+    List<ToDo> results = [];
+
+    if (enteredKeyWord.isEmpty) {
+      results = todosList;
+    } else {
+      results = todosList
+          .where((todo) => todo.todoText!
+              .toLowerCase()
+              .contains(enteredKeyWord.toLowerCase()))
+          .toList();
+    }
+
+    setState(() {
+      _foundToDo = results;
+    });
+  }
+
+  Widget searchBox() {
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(20)),
+        child: TextField(
+          onChanged: (value) => _runFilter(value),
+          decoration: const InputDecoration(
+              contentPadding: EdgeInsets.all(0),
+              prefixIcon: Icon(Icons.search, color: tdBlack, size: 20),
+              prefixIconConstraints:
+                  BoxConstraints(maxHeight: 20, maxWidth: 25),
+              border: InputBorder.none,
+              hintText: 'Search',
+              hintStyle: TextStyle(color: tdGrey)),
+        ));
+  }
 }
